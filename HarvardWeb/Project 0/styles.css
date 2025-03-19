@@ -1,10 +1,59 @@
-.nav {
-    text-align: right;
-    padding: 10px;
+body {
+    font-family: Arial, sans-serif;
+    height: 100vh; /* Makes the body take the full viewport height */
+    margin: 0;
+    display: flex; /* Makes the <body> a flex container */
+    flex-direction: column; /* Arranges child elements (banner & search container) vertically */
+    align-items: center; /*  Centers all elements horizontally */
+    justify-content: center; /* Centers all elements vertically, so content is perfectly in the middle of the screen */
 }
 
-.nav a {
-    text-decoration: none;
-    margin: 10px;
-    color: black;
+
+.banner {
+    display: flex;
+    justify-content: flex-end; /* Pushes links to the right */
+    padding: 15px 20px;
+    width: 100%; /* Makes the banner span the full width of the page */
+    top: 0;
+    right: 0;
+    position: absolute; /* Fix it to the top */
+}
+
+.banner-links {
+    margin-right: 10px;/* Adds spacing to right*/
+    display: flex; /* Ensures links are in one line */  
+    gap: 30px; /* Adds spacing between links */
+}
+
+.banner-links a {
+    text-decoration: none; /* No underline initially */
+    color: #1a73e8; /* Google's blue for links */
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Prevent visited links from turning purple */
+.banner-links a:visited {
+    color: black; /* Keep the same color after visit */
+    
+}
+
+
+.banner-links a:hover {
+    text-decoration: underline;
+}
+
+.search-container {
+    display: flex;
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+    text-align: center;
+}
+
+/* Ensure the search box and buttons are on the same line */
+.search-container form {
+    display: flex; /* Enables flexbox for the form */
+    flex-direction: column; /* Stack search box and buttons */
+    align-items: center; /* Aligns items (search box & buttons) in a row */
+    gap: 10px; /* Adds spacing between the search box and buttons */
 }
