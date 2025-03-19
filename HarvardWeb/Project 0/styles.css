@@ -57,3 +57,27 @@ body {
     align-items: center; /* Aligns items (search box & buttons) in a row */
     gap: 10px; /* Adds spacing between the search box and buttons */
 }
+
+.advanced-search-container {
+    text-align: left; /* Aligns text to the left */
+    width: 100%; 
+    margin-left: 20%; /* Pushes it slightly to the left */
+    justify-content: center; /* Center vertically */
+}
+
+.advanced-search-container form{
+    display: flex; /* Enables flexbox for the form */
+    flex-direction: column; /* Stack search box and buttons */
+    align-items: flex-start; /* Aligns items (search box & buttons) in a row */
+    gap: 10px; /* Adds spacing between the search box and buttons */
+}
+
+/* Advanced Search Button */
+.advanced-button {
+    background-color: #1a73e8;
+    color: white;
+}
+
+.advanced-button:hover {
+    background-color: #174ea6;
+}
