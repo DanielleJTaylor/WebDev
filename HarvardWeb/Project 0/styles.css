@@ -1,0 +1,10 @@
+.nav {
+    text-align: right;
+    padding: 10px;
+}
+
+.nav a {
+    text-decoration: none;
+    margin: 10px;
+    color: black;
+}
