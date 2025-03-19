@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Image Search</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+        <!-- Banner Navigation -->
+        <div class="banner">
+            <div class="banner-links">
+                <a href="index.html"> Back to Google Search </a>
+            </div>
+        </div>
+    
+        <!-- Image Search Box -->
+        <div class="search-container">
+            <form action="https://www.google.com/search">
+                <!--  When a user submits the form, the browser sends a GET request to Google, 
+                including all input values as parameters in the URL.
+
+                type="hidden" → A hidden input that users don’t see on the page.
+                name="tbm" → A GET parameter that will be sent when the form is submitted.
+                value="isch" → This tells Google that the search should be for images.  -->
+                <input type="hidden" name="tbm" value="isch">
+                <input type="text" name="q">
+                <div class="buttons">
+                    <input type="submit" value="Image Search">
+                </div>
+            </form>
+        </div>
+
+    </body>
+    </html>
