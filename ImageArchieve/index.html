@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Search by Tag</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+
+  <!-- Banner -->
+  <div id="banner">
+    <div id="banner-content">
+      <h1>Image Search: Tag System</h1>
+    </div>
+  </div>
+
+
+
+<!-- Main Layout -->
+<div class="main-layout">
+    <!-- Search Sidebar -->
+    <div class="search">
+      <label>Include Tags:</label>
+      <input type="text" id="include" placeholder="e.g. javascript, tech"><br>
+
+      <label>Exclude Tags:</label>
+      <input type="text" id="exclude" placeholder="e.g. gardening"><br>
+
+      <label>Logic:</label>
+      <select id="logic">
+        <option value="or">OR</option>
+        <option value="and">AND</option>
+      </select><br>
+
+      <button onclick="applyFilters()">Filter</button>
+    </div>
+
+
+
+
+    <!-- Blog Grid -->
+    <div class="content">
+      <div class="container" id="card-container">
+        <!-- Cards go here -->
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
