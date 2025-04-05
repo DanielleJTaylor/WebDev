@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image Search by Tag</title>
+  <title>Search By Tag</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -12,7 +12,7 @@
   <!-- Banner -->
   <div id="banner">
     <div id="banner-content">
-      <h1>Image Search: Tag System</h1>
+      <h1>Search By Tag</h1>
     </div>
   </div>
 
@@ -20,16 +20,20 @@
 
 <!-- Main Layout -->
 <div class="main-layout">
-    <!-- Search Sidebar -->
-    <div class="search">
-      <label>Include Tags:</label>
-      <input type="text" id="include" placeholder="e.g. javascript, tech"><br>
-
-      <label>Exclude Tags:</label>
-      <input type="text" id="exclude" placeholder="e.g. gardening"><br>
-
-      <button onclick="applyFilters()">Filter</button>
+  <!-- Sidebar -->
+  <div class="sidenav">
+    <label>Include Tags:</label>
+    <div class="tag-input" id="include-tags">
+      <input type="text" id="include-input" placeholder="Type and press Enter"><br>
     </div>
+    <label>Exclude Tags:</label>
+    <div class="tag-input" id="exclude-tags">
+      <input type="text" id="exclude-input" placeholder="Type and press Enter"><br>
+    </div>
+
+    <button onclick="applyFilters()">Filter</button>
+  </div>
+
 
 
 

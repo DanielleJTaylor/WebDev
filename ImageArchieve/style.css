@@ -23,13 +23,87 @@ html, body {
   padding: 20px;
 }
 
-/* Wrapper that grows with content */
-.main-content {
-  flex: 1;
+.main-layout {
   display: flex;
-  flex-direction: column;
-  padding: 30px;
+  min-height: calc(100vh - 80px);
+  margin-left: 350px; /* same as .sidenav width */
 }
+
+.sidenav {
+  width: 350px;
+  height: 100vh; /* Full height of the screen */
+  background-color: #f4f4f4;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+  box-sizing: border-box;
+  position: fixed;  /* Fix it to the side */
+  top: 80px;        /* Offset below the banner */
+  left: 0;
+  overflow: hidden; /* Prevent scrolling */
+}
+
+
+/* Space out form elements in sidenav */
+.sidenav label {
+  font-weight: bold;
+  margin-top: 10px;
+  display: block;
+}
+
+.sidenav input,
+.sidenav button {
+  width: 100%;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+
+.tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+  align-items: flex-start;  /* important: prevents input from stretching */
+  max-height: 45px;
+  overflow-y: auto;
+  gap: 4px;
+  padding: 2px 4px;
+}
+
+.tag-input input {
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  padding: 4px;
+  margin: 2px;
+  width: auto;           /* ✅ don't force it full width */
+  min-width: 60px;       /* ✅ keeps input visible */
+  flex: 1;               /* ✅ lets it fill remaining space on line */
+}
+
+
+.tag-pill {
+  background-color: #1f2937;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  font-size: 1.2rem;
+  margin: 2px 0;
+}
+
+.tag-pill .remove-tag {
+  margin-left: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+
+
 
 /* Card container grid */
 .container {
@@ -109,5 +183,7 @@ html, body {
 /* Content block that grows naturally */
 .content {
   flex-grow: 1;
-  padding: 30px;
+  padding: 20px;
 }
+
+
