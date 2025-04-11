@@ -67,7 +67,7 @@ html, body {
   border-radius: 6px;
   background: white;
   align-items: flex-start;  /* important: prevents input from stretching */
-  max-height: 45px;
+  max-height: 70px;
   overflow-y: auto;
   gap: 4px;
   padding: 2px 4px;
@@ -185,5 +185,4 @@ html, body {
   flex-grow: 1;
   padding: 20px;
 }
-
 
