@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>D&D Combat Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>🧝 D&D Combat Tracker</h1>
+    <label class="theme-switch">
+      <input type="checkbox" id="themeToggle">
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <div class="controls-row">
+    <div class="controls-right">
+      <button onclick="openCreatureModal()">+ Add Creature</button>
+      <button onclick="addGroup()">+ Add Group</button>
+      <button onclick="startEncounter()">▶ Start Encounter</button>
+    </div>
+
+    <div class="turn-controls">
+      <button onclick="prevTurn()">⬅ Previous Turn</button>
+      <span id="currentTurnDisplay">🟢 Current Turn: Jet</span>
+      <button onclick="nextTurn()">➡ Next Turn</button>
+    </div>
+
+    <div class="controls-right">
+      <button onclick="saveEncounter()">💾 Save Encounter</button>
+      <button onclick="loadEncounter()">📂 Load Encounter</button>
+      <button onclick="exportToPDF()">🖨 Export to PDF</button>
+      <button onclick="clearData()">🗑️ Clear Tracker</button>
+    </div>
+  </div>
+
+  <div class="tracker-wrapper">
+    <div class="tracker-table-header">
+      <div class="cell">INIT</div>
+      <div class="cell">NAME</div>
+      <div class="cell">HP</div>
+      <div class="cell">AC</div>
+      <div class="cell">STATUS</div>
+      <div class="cell">ACTIONS</div>
+    </div>
+    <div id="combatantList"></div>
+  </div>
+
+  <!-- Modal for adding creature -->
+  <div id="creatureModal">
+    <div id="modalContent">
+      <form id="modalCreatureForm">
+        <input type="text" id="modalName" placeholder="Name" required />
+        <input type="number" id="modalInit" placeholder="Initiative" required />
+        <input type="text" id="modalImage" placeholder="Image URL" />
+        <div id="extraFields">
+          <input type="number" id="modalAC" placeholder="Armor Class" />
+          <input type="number" id="modalHP" placeholder="Current HP" />
+          <input type="number" id="modalMaxHP" placeholder="Max HP" />
+        </div>
+        <button type="button" id="showMoreBtn">Show More</button>
+        <button type="submit">Add Creature</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
