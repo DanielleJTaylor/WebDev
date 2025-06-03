@@ -22,38 +22,40 @@
     </div>
   </header>
 
-  <main class="tracker-wrapper">
+    <main class="tracker-wrapper">
     <div class="controls-row">
-      <button id="toggleLogBtn">📜 History Log</button>
-      <span id="roundCounter">Round: 1</span>
-      <button onclick="prevTurn()">⬅ Previous Turn</button>
-      <div id="currentTurnDisplay">🟢 Current Turn: <strong>None</strong></div>
-      <button onclick="nextTurn()">➡ Next Turn</button>
-      <button onclick="saveData()">💾 Save</button>
-      <button onclick="importJSON()">📂 Load</button>
-      <button onclick="exportJSON()">🖨 Export</button>
-      <button id="clearDataBtn">🗑️ Clear</button>
-      <input type="file" id="importJSON" accept=".json" hidden />
+        <button id="toggleLogBtn">📜 History Log</button>
+        <span id="roundCounter">Round: 1</span>
+        <button onclick="prevTurn()">⬅ Previous Turn</button>
+        <div id="currentTurnDisplay">🟢 Current Turn: <strong>None</strong></div>
+        <button onclick="nextTurn()">➡ Next Turn</button>
+        <button onclick="saveData()">💾 Save</button>
+        <button onclick="importJSON()">📂 Load</button>
+        <button onclick="exportJSON()">🖨 Export</button>
+        <button id="clearDataBtn">🗑️ Clear</button>
+        <input type="file" id="importJSON" accept=".json" hidden />
     </div>
 
-    <div class="tracker-table-header">
-      <div class="cell">Init</div>
-      <div class="cell">Name</div>
-      <div class="cell">HP</div>
-      <div class="cell">AC</div>
-      <div class="cell">Status</div>
-      <div class="cell">Actions</div>
-    </div>
-
-    <div class="tracker-content">
-      <aside id="historyLog" style="display: none;">
+    <div class="tracker-container" id="trackerContainer">
+        <aside id="historyLog">
         <h3>📜 Change Log</h3>
         <div id="historyLogContent" class="history-log-content"></div>
-      </aside>
+        </aside>
 
-      <div id="combatantList"></div>
+        <section class="tracker-main">
+        <div class="tracker-table-header">
+            <div class="cell">Init</div>
+            <div class="cell">Name</div>
+            <div class="cell">HP</div>
+            <div class="cell">AC</div>
+            <div class="cell">Status</div>
+            <div class="cell">Actions</div>
+        </div>
+        <div id="combatantList"></div>
+        </section>
     </div>
-  </main>
+    </main>
+
 
   <div id="creatureModal">
     <form id="modalCreatureForm">

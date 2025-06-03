@@ -253,18 +253,39 @@ input:checked + .slider:before {
 }
 
 /* History Log */
+/* Side-by-side layout */
+.tracker-container {
+  display: flex;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 1000px;
+  margin: auto;
+}
+
+/* History Log Sidebar */
 #historyLog {
+  width: 0;
+  overflow: hidden;
   background-color: #1c1c1c;
-  border: 1px solid #444;
+  border-right: 1px solid #444;
+  padding: 1rem 0;
+  transition: width 0.3s ease;
+}
+
+.tracker-container.show-log #historyLog {
+  width: 300px;
   padding: 1rem;
-  margin-top: 1rem;
-  max-height: 300px;
-  overflow-y: auto;
-  border-radius: 6px;
+}
+
+.tracker-main {
+  flex: 1;
+  transition: all 0.3s ease;
 }
 
 .history-log-content {
   font-size: 0.9rem;
   color: #ccc;
   line-height: 1.4;
+  max-height: 500px;
+  overflow-y: auto;
 }

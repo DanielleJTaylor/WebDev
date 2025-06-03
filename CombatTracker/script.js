@@ -20,12 +20,13 @@ document.getElementById('clearDataBtn').addEventListener('click', () => {
 });
 document.getElementById('importJSON').addEventListener('change', handleImport);
 document.getElementById('toggleLogBtn').addEventListener('click', () => {
-  const logEl = document.getElementById('historyLog');
-  logEl.style.display = logEl.style.display === 'none' ? 'block' : 'none';
+  const container = document.getElementById('trackerContainer');
+  container.classList.toggle('show-log');
 
   const logContent = document.getElementById('historyLogContent');
   logContent.innerHTML = historyLog.map(entry => `<div>${entry}</div>`).join('');
 });
+
 
 
 function openCreatureModal() {
