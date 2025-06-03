@@ -290,3 +290,64 @@ input:checked + .slider:before {
   max-height: 500px;
   overflow-y: auto;
 }
+
+/* Creature row used for ALL combatants including group members */
+.creature-row {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--border);
+  padding: 4px;
+}
+
+/* Column style (already used in header) */
+.cell {
+  flex: 1;
+  padding: 4px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Header row */
+.tracker-table-header {
+  display: flex;
+  font-weight: bold;
+  background-color: var(--header-bg);
+  padding: 6px;
+  border-bottom: 2px solid var(--border);
+}
+
+/* Drop zone under group */
+.drop-zone {
+  background-color: transparent;
+  color: transparent;
+  border: none;
+  text-align: center;
+  font-style: italic;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.4rem;
+  transition: all 0.2s ease;
+  min-height: 1rem; /* avoids layout jump */
+}
+
+/* Show only when hovered or dragging */
+.drop-zone.drag-over {
+  background-color: #2a2a2a;
+  color: #aaa;
+  border: 1px dashed #666;
+}
+
+
+
+/* Best approach for grid layout: */
+.creature-row[data-group-member="true"] .cell:nth-child(2) {
+  transform: translateX(1.5em);
+}
+
+
+.creature-row[data-group-member="true"] .cell:nth-child(2)::before {
+  content: "↳ ";
+  color: #888;
+}

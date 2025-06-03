@@ -10,6 +10,29 @@ const statusOptions = [
 
 document.getElementById('addCombatantBtn').addEventListener('click', openCreatureModal);
 document.getElementById('modalCreatureForm').addEventListener('submit', addCombatant);
+
+document.getElementById('addGroupBtn').addEventListener('click', () => {
+  const name = prompt("Enter group name:");
+  const init = parseInt(prompt("Enter group initiative:"), 10);
+  if (!name || isNaN(init)) return;
+
+  const group = {
+    id: generateUniqueId(),
+    name: getUniqueName(name), // ← ADD THIS
+    init,
+    isGroup: true,
+    members: []
+  };
+
+
+  combatants.push(group);
+  logChange(`Added group: ${name} (Init: ${init})`);
+  sortCombatants();
+  saveData();
+  renderCombatants();
+});
+
+
 document.getElementById('clearDataBtn').addEventListener('click', () => {
   if (confirm('Clear all combatants?')) {
     logChange('Cleared all combatants.');
@@ -18,7 +41,9 @@ document.getElementById('clearDataBtn').addEventListener('click', () => {
     renderCombatants();
   }
 });
+
 document.getElementById('importJSON').addEventListener('change', handleImport);
+
 document.getElementById('toggleLogBtn').addEventListener('click', () => {
   const container = document.getElementById('trackerContainer');
   container.classList.toggle('show-log');
@@ -27,7 +52,9 @@ document.getElementById('toggleLogBtn').addEventListener('click', () => {
   logContent.innerHTML = historyLog.map(entry => `<div>${entry}</div>`).join('');
 });
 
-
+document.getElementById('showMoreBtn').addEventListener('click', () => {
+  document.getElementById('extraFields').style.display = 'flex';
+});
 
 function openCreatureModal() {
   document.getElementById('creatureModal').style.display = 'flex';
@@ -39,9 +66,39 @@ function closeCreatureModal() {
   document.getElementById('extraFields').style.display = 'none';
 }
 
-document.getElementById('showMoreBtn').addEventListener('click', () => {
-  document.getElementById('extraFields').style.display = 'flex';
-});
+function generateUniqueId() {
+  return '_' + Math.random().toString(36).substr(2, 9);
+}
+
+
+function getUniqueName(baseName) {
+  // Break off the trailing number if it exists
+  const match = baseName.match(/^(.*?)(?: (\d+))?$/);
+  const namePart = match[1].trim();
+  
+  let maxSuffix = 0;
+
+  combatants.forEach(c => {
+    const cMatch = c.name.match(/^(.+?)(?: (\d+))?$/);
+    if (!cMatch) return;
+    const cName = cMatch[1].trim();
+    const cNum = parseInt(cMatch[2]);
+
+    if (cName === namePart) {
+      if (!isNaN(cNum)) {
+        maxSuffix = Math.max(maxSuffix, cNum);
+      } else {
+        maxSuffix = Math.max(maxSuffix, 1);
+      }
+    }
+  });
+
+  return maxSuffix === 0 && !combatants.some(c => c.name === namePart)
+    ? namePart
+    : `${namePart} ${maxSuffix + 1}`;
+}
+
+
 
 function addCombatant(event) {
   event.preventDefault();
@@ -52,11 +109,17 @@ function addCombatant(event) {
   const hp = document.getElementById('modalHP').value || '-';
   const maxHp = document.getElementById('modalMaxHP').value || hp;
 
+const uniqueName = getUniqueName(name);
+
   combatants.push({
-    name, init, image, ac, hp, maxHp,
+    id: generateUniqueId(),
+    name: uniqueName,
+    init, image, ac, hp, maxHp,
     statusEffects: [],
-    group: null
+    isGroup: false,
+    groupId: null
   });
+
 
   logChange(`Added combatant: ${name} (Init: ${init})`);
   closeCreatureModal();
@@ -66,8 +129,13 @@ function addCombatant(event) {
 }
 
 function sortCombatants() {
-  combatants.sort((a, b) => b.init - a.init);
+  combatants.sort((a, b) => {
+    const aInit = a.isGroup ? a.init : a.init;
+    const bInit = b.isGroup ? b.init : b.init;
+    return bInit - aInit;
+  });
 }
+
 
 function renderCombatants() {
   const list = document.getElementById('combatantList');
@@ -90,9 +158,10 @@ function renderCombatants() {
         const member = combatants.find(c => c.id === memberId);
         if (member) {
           const memberRow = document.createElement('div');
-          memberRow.className = 'group-member';
+          memberRow.className = 'creature-row';  // same class as other rows
           memberRow.setAttribute('draggable', true);
           memberRow.setAttribute('data-id', member.id);
+          memberRow.dataset.groupMember = "true";
           memberRow.innerHTML = `
             <div class="cell"></div>
             <div class="cell">- ${member.name}</div>
@@ -108,7 +177,7 @@ function renderCombatants() {
         }
       });
 
-      // Drop zone for adding combatants to the group
+      // Drop zone
       const dropZone = document.createElement('div');
       dropZone.className = 'drop-zone';
       dropZone.setAttribute('data-group-id', group.id);
@@ -125,11 +194,17 @@ function renderCombatants() {
       row.setAttribute('draggable', true);
       row.setAttribute('data-id', c.id);
       row.innerHTML = `
-        <div class="cell">${c.init}</div>
-        <div class="cell">${c.name}</div>
+        <div class="cell" contenteditable onblur="updateField('${c.id}', 'init', this.innerText)">${c.init}</div>
+        <div class="cell" contenteditable onblur="updateField('${c.id}', 'name', this.innerText)">${c.name}</div>
         <div class="cell">${c.hp}/${c.maxHp}</div>
         <div class="cell">${c.ac}</div>
-        <div class="cell">${renderStatusTags(c)}</div>
+        <div class="cell">
+          ${renderStatusTags(c)}
+          <select onchange="applyStatusEffect('${c.id}', this)">
+            <option value="">+ Condition</option>
+            ${statusOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+          </select>
+        </div>
         <div class="cell">
           <button onclick="duplicateCombatant('${c.id}')">+</button>
           <button onclick="deleteCombatant('${c.id}')">✖</button>
@@ -140,53 +215,72 @@ function renderCombatants() {
 
   updateTurnDisplay();
   document.getElementById('roundCounter').textContent = `Round: ${round}`;
+  addDragAndDropListeners();
 }
 
 
-function adjustHp(index, delta) {
-  let c = combatants[index];
-  if (!isNaN(parseInt(c.hp))) {
-    const oldHp = c.hp;
-    c.hp = Math.max(0, parseInt(c.hp) + delta);
-    logChange(`${c.name} HP changed: ${oldHp} → ${c.hp}`);
-    saveData();
-    renderCombatants();
-  }
+
+function renderStatusTags(c) {
+  return (c.statusEffects || [])
+    .map(se => `<span class="status-tag">${se.name} (${se.rounds})</span>`)
+    .join(' ');
 }
 
-function deleteCombatant(index) {
-  const name = combatants[index]?.name;
-  combatants.splice(index, 1);
-  logChange(`Deleted combatant: ${name}`);
-  if (currentTurnIndex >= combatants.length) {
-    currentTurnIndex = 0;
-  }
+function adjustHp(id, delta) {
+  const c = combatants.find(c => c.id === id);
+  if (!c || isNaN(parseInt(c.hp))) return;
+
+  const oldHp = c.hp;
+  c.hp = Math.max(0, parseInt(c.hp) + delta);
+  logChange(`${c.name} HP changed: ${oldHp} → ${c.hp}`);
   saveData();
   renderCombatants();
 }
 
-function updateField(index, field, value) {
-  const oldValue = combatants[index][field];
-  combatants[index][field] = value;
-  logChange(`${combatants[index].name} ${field} changed: ${oldValue} → ${value}`);
+function deleteCombatant(id) {
+  const index = combatants.findIndex(c => c.id === id);
+  if (index === -1) return;
+
+  const c = combatants[index];
+  if (c.groupId) {
+    const group = combatants.find(g => g.id === c.groupId);
+    if (group && group.isGroup) {
+      group.members = group.members.filter(mid => mid !== c.id);
+    }
+  }
+
+  logChange(`Deleted combatant: ${c.name}`);
+  combatants.splice(index, 1);
+  if (currentTurnIndex >= combatants.length) currentTurnIndex = 0;
+  saveData();
+  renderCombatants();
+}
+
+function updateField(id, field, value) {
+  const combatant = combatants.find(c => c.id === id);
+  if (!combatant) return;
+  const oldValue = combatant[field];
+  combatant[field] = value;
+  logChange(`${combatant.name} ${field} changed: ${oldValue} → ${value}`);
   saveData();
 }
 
-function applyStatusEffect(index, selectEl) {
+function applyStatusEffect(id, selectEl) {
   const effect = selectEl.value;
   if (!effect) return;
 
   const rounds = parseInt(prompt(`How many rounds should ${effect} last?`), 10);
   if (isNaN(rounds) || rounds <= 0) return;
 
-  const combatant = combatants[index];
-  if (!combatant.statusEffects) combatant.statusEffects = [];
+  const combatant = combatants.find(c => c.id === id);
+  if (!combatant) return;
 
   combatant.statusEffects.push({ name: effect, rounds });
   logChange(`${combatant.name} gained status: ${effect} (${rounds} rounds)`);
   saveData();
   renderCombatants();
 }
+
 
 function nextTurn() {
   currentTurnIndex++;
@@ -224,11 +318,11 @@ function duplicateCombatant(id) {
 
   const duplicate = { ...original };
   duplicate.id = generateUniqueId();
-  duplicate.name += ' (Copy)';
+  duplicate.name = getUniqueName(original.name);
+
 
   combatants.push(duplicate);
 
-  // If the original is in a group, add the duplicate to the same group
   if (original.groupId) {
     const group = combatants.find(c => c.id === original.groupId);
     if (group && group.isGroup) {
@@ -241,8 +335,6 @@ function duplicateCombatant(id) {
   renderCombatants();
 }
 
-
-// Add event listeners after rendering
 function addDragAndDropListeners() {
   const draggableItems = document.querySelectorAll('[draggable="true"]');
   const dropZones = document.querySelectorAll('.drop-zone');
@@ -294,6 +386,8 @@ function drop(e) {
   }
 }
 
+
+
 function sortCombatants() {
   // Sort groups and ungrouped combatants by initiative
   combatants.sort((a, b) => {
@@ -302,8 +396,6 @@ function sortCombatants() {
     return bInit - aInit;
   });
 }
-
-
 
 function tickStatusEffects() {
   combatants.forEach(c => {
@@ -332,6 +424,8 @@ function loadData() {
   round = parseInt(localStorage.getItem('round')) || 1;
   renderCombatants();
 }
+
+
 
 function exportJSON() {
   const data = JSON.stringify({ combatants, currentTurnIndex, round }, null, 2);
@@ -368,4 +462,49 @@ function logChange(msg) {
   historyLog.push(`[${timestamp}] ${msg}`);
 }
 
+
+window.addEventListener('load', loadData);
+
+
+// Ensure combatants with missing fields (from imported data) still render correctly
+function sanitizeCombatantData() {
+  combatants.forEach(c => {
+    if (!c.hasOwnProperty('statusEffects')) c.statusEffects = [];
+    if (!c.hasOwnProperty('isGroup')) c.isGroup = false;
+    if (!c.hasOwnProperty('groupId')) c.groupId = null;
+    if (c.isGroup && !c.members) c.members = [];
+  });
+}
+
+function loadData() {
+  const stored = localStorage.getItem('combatants');
+  if (stored) combatants = JSON.parse(stored);
+
+  sanitizeCombatantData(); // 🧼 Clean up old/missing keys
+
+  currentTurnIndex = parseInt(localStorage.getItem('turnIndex')) || 0;
+  round = parseInt(localStorage.getItem('round')) || 1;
+  renderCombatants();
+}
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const data = JSON.parse(e.target.result);
+    combatants = data.combatants || [];
+    currentTurnIndex = data.currentTurnIndex || 0;
+    round = data.round || 1;
+
+    sanitizeCombatantData(); // 🧼 Ensure new fields exist
+
+    logChange('Imported encounter from file.');
+    saveData();
+    renderCombatants();
+  };
+  reader.readAsText(file);
+}
+
+// Initial load when page opens
 window.addEventListener('load', loadData);
