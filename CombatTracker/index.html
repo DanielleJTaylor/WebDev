@@ -7,26 +7,33 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
+  <header class="header-bar">
     <h1>🧝 D&D Combat Tracker</h1>
-    <div>
+    <div class="theme-container">
+      <label class="theme-switch">
+        <input type="checkbox" id="themeToggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="button-group">
       <button id="addCombatantBtn">+ Add Combatant</button>
       <button id="addGroupBtn">+ Add Group</button>
       <button id="startEncounterBtn">▶ Start Encounter</button>
     </div>
   </header>
 
-  <section class="tracker-wrapper">
+  <main class="tracker-wrapper">
     <div class="controls-row">
+      <button id="toggleLogBtn">📜 History Log</button>
       <span id="roundCounter">Round: 1</span>
       <button onclick="prevTurn()">⬅ Previous Turn</button>
       <div id="currentTurnDisplay">🟢 Current Turn: <strong>None</strong></div>
       <button onclick="nextTurn()">➡ Next Turn</button>
-      <button onclick="saveEncounter()">💾 Save</button>
-      <button onclick="triggerImport()">📂 Load</button>
-      <button onclick="exportToPDF()">🖨 Export</button>
-      <button onclick="clearData()">🗑️ Clear</button>
-      <input type="file" id="importInput" accept=".json" hidden />
+      <button onclick="saveData()">💾 Save</button>
+      <button onclick="importJSON()">📂 Load</button>
+      <button onclick="exportJSON()">🖨 Export</button>
+      <button id="clearDataBtn">🗑️ Clear</button>
+      <input type="file" id="importJSON" accept=".json" hidden />
     </div>
 
     <div class="tracker-table-header">
@@ -37,8 +44,16 @@
       <div class="cell">Status</div>
       <div class="cell">Actions</div>
     </div>
-    <div id="combatantList"></div>
-  </section>
+
+    <div class="tracker-content">
+      <aside id="historyLog" style="display: none;">
+        <h3>📜 Change Log</h3>
+        <div id="historyLogContent" class="history-log-content"></div>
+      </aside>
+
+      <div id="combatantList"></div>
+    </div>
+  </main>
 
   <div id="creatureModal">
     <form id="modalCreatureForm">
@@ -57,13 +72,6 @@
       </div>
     </form>
   </div>
-
-  <footer style="text-align:center;margin-top:2rem;">
-    <label class="theme-switch">
-      <input type="checkbox" id="themeToggle" />
-      <span class="slider"></span>
-    </label>
-  </footer>
 
   <script src="script.js"></script>
 </body>

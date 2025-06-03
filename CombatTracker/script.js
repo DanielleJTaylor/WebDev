@@ -1,6 +1,7 @@
 let combatants = [];
 let currentTurnIndex = 0;
 let round = 1;
+let historyLog = [];
 
 const statusOptions = [
   'Charmed', 'Frightened', 'Prone', 'Poisoned',
@@ -9,7 +10,23 @@ const statusOptions = [
 
 document.getElementById('addCombatantBtn').addEventListener('click', openCreatureModal);
 document.getElementById('modalCreatureForm').addEventListener('submit', addCombatant);
-document.getElementById('importInput').addEventListener('change', handleImport);
+document.getElementById('clearDataBtn').addEventListener('click', () => {
+  if (confirm('Clear all combatants?')) {
+    logChange('Cleared all combatants.');
+    combatants = [];
+    saveData();
+    renderCombatants();
+  }
+});
+document.getElementById('importJSON').addEventListener('change', handleImport);
+document.getElementById('toggleLogBtn').addEventListener('click', () => {
+  const logEl = document.getElementById('historyLog');
+  logEl.style.display = logEl.style.display === 'none' ? 'block' : 'none';
+
+  const logContent = document.getElementById('historyLogContent');
+  logContent.innerHTML = historyLog.map(entry => `<div>${entry}</div>`).join('');
+});
+
 
 function openCreatureModal() {
   document.getElementById('creatureModal').style.display = 'flex';
@@ -40,6 +57,7 @@ function addCombatant(event) {
     group: null
   });
 
+  logChange(`Added combatant: ${name} (Init: ${init})`);
   closeCreatureModal();
   sortCombatants();
   saveData();
@@ -59,22 +77,22 @@ function renderCombatants() {
     row.className = 'creature-row';
 
     const statusTags = c.statusEffects?.map(se => {
-      return `<span class="status-tag">${se.name} (${se.rounds})</span>`;
+      return `<span class="status-tag ${se.name.toLowerCase()}">${se.name} (${se.rounds})</span>`;
     }).join(' ') || '';
 
     const statusDropdown = `
       <select onchange="applyStatusEffect(${index}, this)">
-        <option value="">＋ Add</option>
-        ${statusOptions.map(s => `<option value="${s}">${s}</option>`).join('')}
+        <option value="">＋ Add Status</option>
+        ${statusOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
       </select>
     `;
 
     row.innerHTML = `
-      <div class="cell">${c.init}</div>
-      <div class="cell">${c.name}</div>
-      <div class="cell">${c.hp}/${c.maxHp}</div>
-      <div class="cell">${c.ac}</div>
-      <div class="cell">${statusTags}${statusDropdown}</div>
+      <div class="cell" contenteditable onblur="updateField(${index}, 'init', this.innerText)">${c.init}</div>
+      <div class="cell" contenteditable onblur="updateField(${index}, 'name', this.innerText)">${c.name}</div>
+      <div class="cell" contenteditable onblur="updateField(${index}, 'hp', this.innerText)">${c.hp}/${c.maxHp}</div>
+      <div class="cell" contenteditable onblur="updateField(${index}, 'ac', this.innerText)">${c.ac}</div>
+      <div class="cell">${statusTags} ${statusDropdown}</div>
       <div class="cell cell-actions">
         <button onclick="adjustHp(${index}, 1)">＋</button>
         <button onclick="adjustHp(${index}, -1)">−</button>
@@ -92,17 +110,44 @@ function renderCombatants() {
 function adjustHp(index, delta) {
   let c = combatants[index];
   if (!isNaN(parseInt(c.hp))) {
+    const oldHp = c.hp;
     c.hp = Math.max(0, parseInt(c.hp) + delta);
+    logChange(`${c.name} HP changed: ${oldHp} → ${c.hp}`);
     saveData();
     renderCombatants();
   }
 }
 
 function deleteCombatant(index) {
+  const name = combatants[index]?.name;
   combatants.splice(index, 1);
+  logChange(`Deleted combatant: ${name}`);
   if (currentTurnIndex >= combatants.length) {
     currentTurnIndex = 0;
   }
+  saveData();
+  renderCombatants();
+}
+
+function updateField(index, field, value) {
+  const oldValue = combatants[index][field];
+  combatants[index][field] = value;
+  logChange(`${combatants[index].name} ${field} changed: ${oldValue} → ${value}`);
+  saveData();
+}
+
+function applyStatusEffect(index, selectEl) {
+  const effect = selectEl.value;
+  if (!effect) return;
+
+  const rounds = parseInt(prompt(`How many rounds should ${effect} last?`), 10);
+  if (isNaN(rounds) || rounds <= 0) return;
+
+  const combatant = combatants[index];
+  if (!combatant.statusEffects) combatant.statusEffects = [];
+
+  combatant.statusEffects.push({ name: effect, rounds });
+  logChange(`${combatant.name} gained status: ${effect} (${rounds} rounds)`);
   saveData();
   renderCombatants();
 }
@@ -113,6 +158,7 @@ function nextTurn() {
     currentTurnIndex = 0;
     round++;
     tickStatusEffects();
+    logChange(`Round advanced to ${round}`);
   }
   renderCombatants();
 }
@@ -122,6 +168,7 @@ function prevTurn() {
   if (currentTurnIndex < 0) {
     currentTurnIndex = combatants.length - 1;
     round = Math.max(1, round - 1);
+    logChange(`Round reverted to ${round}`);
   }
   renderCombatants();
 }
@@ -137,25 +184,16 @@ function updateTurnDisplay() {
 
 function tickStatusEffects() {
   combatants.forEach(c => {
+    const before = c.statusEffects?.length || 0;
     c.statusEffects = (c.statusEffects || []).map(effect => ({
       ...effect,
       rounds: effect.rounds - 1
     })).filter(effect => effect.rounds > 0);
+    const after = c.statusEffects.length;
+    if (before > after) {
+      logChange(`${c.name} lost expired status effect(s).`);
+    }
   });
-}
-
-function applyStatusEffect(index, select) {
-  const effect = select.value;
-  if (!effect) return;
-  const rounds = parseInt(prompt('How many rounds?'), 10);
-  if (isNaN(rounds) || rounds <= 0) return;
-
-  const combatant = combatants[index];
-  if (!combatant.statusEffects) combatant.statusEffects = [];
-
-  combatant.statusEffects.push({ name: effect, rounds });
-  saveData();
-  renderCombatants();
 }
 
 function saveData() {
@@ -172,12 +210,18 @@ function loadData() {
   renderCombatants();
 }
 
-function exportToPDF() {
-  alert("PDF export not yet implemented.");
+function exportJSON() {
+  const data = JSON.stringify({ combatants, currentTurnIndex, round }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'combat_tracker.json';
+  link.click();
 }
 
-function triggerImport() {
-  document.getElementById('importInput').click();
+function importJSON() {
+  document.getElementById('importJSON').click();
 }
 
 function handleImport(event) {
@@ -189,10 +233,16 @@ function handleImport(event) {
     combatants = data.combatants || [];
     currentTurnIndex = data.currentTurnIndex || 0;
     round = data.round || 1;
+    logChange('Imported encounter from file.');
     saveData();
     renderCombatants();
   };
   reader.readAsText(file);
+}
+
+function logChange(msg) {
+  const timestamp = new Date().toLocaleTimeString();
+  historyLog.push(`[${timestamp}] ${msg}`);
 }
 
 window.addEventListener('load', loadData);
