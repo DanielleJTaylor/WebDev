@@ -73,40 +73,75 @@ function renderCombatants() {
   const list = document.getElementById('combatantList');
   list.innerHTML = '';
 
-  combatants.forEach((c, index) => {
-    const row = document.createElement('div');
-    row.className = 'creature-row';
+  // Render groups
+  combatants
+    .filter(c => c.isGroup)
+    .forEach(group => {
+      const groupRow = document.createElement('div');
+      groupRow.className = 'group-row';
+      groupRow.innerHTML = `
+        <div class="cell">${group.init}</div>
+        <div class="cell" colspan="5">${group.name} (Group)</div>
+      `;
+      list.appendChild(groupRow);
 
-    const statusTags = c.statusEffects?.map(se => {
-      return `<span class="status-tag ${se.name.toLowerCase()}">${se.name} (${se.rounds})</span>`;
-    }).join(' ') || '';
+      // Render group members
+      group.members.forEach(memberId => {
+        const member = combatants.find(c => c.id === memberId);
+        if (member) {
+          const memberRow = document.createElement('div');
+          memberRow.className = 'group-member';
+          memberRow.setAttribute('draggable', true);
+          memberRow.setAttribute('data-id', member.id);
+          memberRow.innerHTML = `
+            <div class="cell"></div>
+            <div class="cell">- ${member.name}</div>
+            <div class="cell">${member.hp}/${member.maxHp}</div>
+            <div class="cell">${member.ac}</div>
+            <div class="cell">${renderStatusTags(member)}</div>
+            <div class="cell">
+              <button onclick="duplicateCombatant('${member.id}')">+</button>
+              <button onclick="deleteCombatant('${member.id}')">✖</button>
+            </div>
+          `;
+          list.appendChild(memberRow);
+        }
+      });
 
-    const statusDropdown = `
-      <select onchange="applyStatusEffect(${index}, this)">
-        <option value="">＋ Add Status</option>
-        ${statusOptions.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-      </select>
-    `;
+      // Drop zone for adding combatants to the group
+      const dropZone = document.createElement('div');
+      dropZone.className = 'drop-zone';
+      dropZone.setAttribute('data-group-id', group.id);
+      dropZone.innerText = '[ Drag here to add to group ]';
+      list.appendChild(dropZone);
+    });
 
-    row.innerHTML = `
-      <div class="cell" contenteditable onblur="updateField(${index}, 'init', this.innerText)">${c.init}</div>
-      <div class="cell" contenteditable onblur="updateField(${index}, 'name', this.innerText)">${c.name}</div>
-      <div class="cell" contenteditable onblur="updateField(${index}, 'hp', this.innerText)">${c.hp}/${c.maxHp}</div>
-      <div class="cell" contenteditable onblur="updateField(${index}, 'ac', this.innerText)">${c.ac}</div>
-      <div class="cell">${statusTags} ${statusDropdown}</div>
-      <div class="cell cell-actions">
-        <button onclick="adjustHp(${index}, 1)">＋</button>
-        <button onclick="adjustHp(${index}, -1)">−</button>
-        <button onclick="deleteCombatant(${index})">✖</button>
-      </div>
-    `;
-
-    list.appendChild(row);
-  });
+  // Render ungrouped combatants
+  combatants
+    .filter(c => !c.isGroup && !c.groupId)
+    .forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'creature-row';
+      row.setAttribute('draggable', true);
+      row.setAttribute('data-id', c.id);
+      row.innerHTML = `
+        <div class="cell">${c.init}</div>
+        <div class="cell">${c.name}</div>
+        <div class="cell">${c.hp}/${c.maxHp}</div>
+        <div class="cell">${c.ac}</div>
+        <div class="cell">${renderStatusTags(c)}</div>
+        <div class="cell">
+          <button onclick="duplicateCombatant('${c.id}')">+</button>
+          <button onclick="deleteCombatant('${c.id}')">✖</button>
+        </div>
+      `;
+      list.appendChild(row);
+    });
 
   updateTurnDisplay();
   document.getElementById('roundCounter').textContent = `Round: ${round}`;
 }
+
 
 function adjustHp(index, delta) {
   let c = combatants[index];
@@ -182,6 +217,93 @@ function updateTurnDisplay() {
     display.innerHTML = `🟢 Current Turn: <strong>${combatants[currentTurnIndex]?.name}</strong>`;
   }
 }
+
+function duplicateCombatant(id) {
+  const original = combatants.find(c => c.id === id);
+  if (!original) return;
+
+  const duplicate = { ...original };
+  duplicate.id = generateUniqueId();
+  duplicate.name += ' (Copy)';
+
+  combatants.push(duplicate);
+
+  // If the original is in a group, add the duplicate to the same group
+  if (original.groupId) {
+    const group = combatants.find(c => c.id === original.groupId);
+    if (group && group.isGroup) {
+      group.members.push(duplicate.id);
+      duplicate.groupId = group.id;
+    }
+  }
+
+  saveData();
+  renderCombatants();
+}
+
+
+// Add event listeners after rendering
+function addDragAndDropListeners() {
+  const draggableItems = document.querySelectorAll('[draggable="true"]');
+  const dropZones = document.querySelectorAll('.drop-zone');
+
+  draggableItems.forEach(item => {
+    item.addEventListener('dragstart', dragStart);
+  });
+
+  dropZones.forEach(zone => {
+    zone.addEventListener('dragover', dragOver);
+    zone.addEventListener('drop', drop);
+  });
+}
+
+function dragStart(e) {
+  e.dataTransfer.setData('text/plain', e.target.getAttribute('data-id'));
+}
+
+function dragOver(e) {
+  e.preventDefault();
+}
+
+function drop(e) {
+  e.preventDefault();
+  const combatantId = e.dataTransfer.getData('text/plain');
+  const groupId = e.target.getAttribute('data-group-id');
+
+  const combatant = combatants.find(c => c.id === combatantId);
+  const group = combatants.find(c => c.id === groupId);
+
+  if (combatant && group && group.isGroup) {
+    // Remove from previous group if any
+    if (combatant.groupId) {
+      const oldGroup = combatants.find(c => c.id === combatant.groupId);
+      if (oldGroup && oldGroup.isGroup) {
+        oldGroup.members = oldGroup.members.filter(id => id !== combatant.id);
+      }
+    }
+
+    // Add to new group
+    combatant.groupId = group.id;
+    group.members.push(combatant.id);
+
+    // Set combatant's initiative to match the group's
+    combatant.init = group.init;
+
+    saveData();
+    renderCombatants();
+  }
+}
+
+function sortCombatants() {
+  // Sort groups and ungrouped combatants by initiative
+  combatants.sort((a, b) => {
+    const aInit = a.isGroup ? a.init : a.init;
+    const bInit = b.isGroup ? b.init : b.init;
+    return bInit - aInit;
+  });
+}
+
+
 
 function tickStatusEffects() {
   combatants.forEach(c => {
