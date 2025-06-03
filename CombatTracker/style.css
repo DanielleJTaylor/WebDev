@@ -266,15 +266,16 @@ input:checked + .slider:before {
 #historyLog {
   width: 0;
   overflow: hidden;
-  background-color: #1c1c1c;
-  border-right: 1px solid #444;
-  padding: 1rem 0;
-  transition: width 0.3s ease;
+  background-color: transparent;
+  border-right: none;
+  padding: 0;
+  transition: width 0.3s ease, padding 0.3s ease, background-color 0.3s ease;
 }
 
 .tracker-container.show-log #historyLog {
-  width: 300px;
-  padding: 1rem;
+    width: 300px;
+    padding: 1rem;
+    margin-right: 2rem;
 }
 
 .tracker-main {
