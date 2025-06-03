@@ -18,6 +18,7 @@ header {
 
 header h1 {
   margin: 0;
+  font-size: 1.5rem;
 }
 
 button {
@@ -29,6 +30,7 @@ button {
   cursor: pointer;
   margin-right: 0.5rem;
   transition: background-color 0.3s ease;
+  font-size: 0.9rem;
 }
 
 button:hover {
@@ -47,12 +49,6 @@ button:hover {
   margin: auto;
 }
 
-.controls-right {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
 #currentTurnDisplay {
   font-size: 1.1rem;
   font-weight: bold;
@@ -68,13 +64,13 @@ button:hover {
 .tracker-table-header,
 .creature-row {
   display: grid;
-  grid-template-columns: 60px 1.5fr 1fr 60px 1fr 1.5fr;
+  grid-template-columns: 60px 1.5fr 1fr 60px 1.5fr 1.5fr;
   align-items: center;
   background-color: #1f1f1f;
   padding: 0.2rem 0.5rem;
   border-bottom: 1px solid #333;
   font-size: 1rem;
-  min-height: 34px;
+  min-height: 32px;
 }
 
 .tracker-table-header {
@@ -137,6 +133,53 @@ button:hover {
 
 .cell-actions button:hover {
   background-color: #666;
+}
+
+/* Status Tags */
+.status-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+.status-tag {
+  background-color: #444;
+  border-radius: 3px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.75rem;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.status-tag.rounded {
+  border-radius: 8px;
+}
+
+.status-tag .remove-tag {
+  cursor: pointer;
+  color: #bbb;
+  font-weight: bold;
+  margin-left: 0.3rem;
+}
+
+.status-tag.charmed { background-color: #aa6ecb; }
+.status-tag.prone { background-color: #bc6; }
+.status-tag.frightened { background-color: #e67; }
+.status-tag.poisoned { background-color: #b44; }
+.status-tag.invisible { background-color: #888; }
+.status-tag.faerie-fire { background-color: #59f; }
+
+.status-select {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  color: white;
+  padding: 0.2rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
 }
 
 /* Modal */

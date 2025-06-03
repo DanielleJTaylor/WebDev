@@ -1,267 +1,198 @@
-const addCombatantBtn = document.getElementById("addCombatantBtn");
-const creatureModal = document.getElementById("creatureModal");
-const modalForm = document.getElementById("modalCreatureForm");
-const showMoreBtn = document.getElementById("showMoreBtn");
-const extraFields = document.getElementById("extraFields");
-const combatantList = document.getElementById("combatantList");
-const themeToggle = document.getElementById("themeToggle");
-const currentTurnDisplay = document.getElementById("currentTurnDisplay");
-const addGroupBtn = document.getElementById("addGroupBtn");
-const clearDataBtn = document.getElementById("clearDataBtn");
-
 let combatants = [];
 let currentTurnIndex = 0;
+let round = 1;
 
-// Load from localStorage
-window.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("combatants");
-  if (saved) {
-    combatants = JSON.parse(saved);
-  }
+const statusOptions = [
+  'Charmed', 'Frightened', 'Prone', 'Poisoned',
+  'Stunned', 'Blinded', 'Invisible', 'Paralyzed', 'Restrained'
+];
 
-  const savedTheme = localStorage.getItem("theme");
-  const isDark = savedTheme === "dark";
-  document.body.classList.toggle("dark", isDark);
-  themeToggle.checked = isDark;
+document.getElementById('addCombatantBtn').addEventListener('click', openCreatureModal);
+document.getElementById('modalCreatureForm').addEventListener('submit', addCombatant);
+document.getElementById('importInput').addEventListener('change', handleImport);
 
-  renderCombatants();
-});
-
-// Theme toggle
-themeToggle.addEventListener("change", () => {
-  document.body.classList.toggle("dark", themeToggle.checked);
-  localStorage.setItem("theme", themeToggle.checked ? "dark" : "light");
-});
-
-// Show modal
-addCombatantBtn.addEventListener("click", () => {
-  creatureModal.style.display = "flex";
-});
-
-// Add group
-addGroupBtn.addEventListener("click", () => {
-  const group = {
-    id: Date.now(),
-    name: "New Group",
-    init: 0,
-    isGroup: true,
-    members: []
-  };
-  combatants.push(group);
-  sortCombatants();
-  saveCombatants();
-  renderCombatants();
-});
-
-// Clear all
-clearDataBtn.addEventListener("click", () => {
-  if (confirm("Clear all combatants?")) {
-    combatants = [];
-    currentTurnIndex = 0;
-    saveCombatants();
-    renderCombatants();
-  }
-});
-
-// Close modal
-creatureModal.addEventListener("click", (e) => {
-  if (e.target === creatureModal) {
-    creatureModal.style.display = "none";
-    modalForm.reset();
-    extraFields.style.display = "none";
-  }
-});
-
-// Show more fields
-showMoreBtn.addEventListener("click", () => {
-  extraFields.style.display = extraFields.style.display === "none" ? "flex" : "none";
-});
-
-// Add combatant
-modalForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  const name = document.getElementById("modalName").value;
-  const init = parseInt(document.getElementById("modalInit").value, 10);
-  const image = document.getElementById("modalImage").value;
-  const ac = document.getElementById("modalAC").value || "";
-  const hp = document.getElementById("modalHP").value || "";
-  const maxHp = document.getElementById("modalMaxHP").value || "";
-  const status = document.getElementById("modalStatus")?.value || "";
-
-  const combatant = {
-    id: Date.now(),
-    name,
-    init,
-    image,
-    ac,
-    hp,
-    maxHp,
-    status,
-    isGroup: false
-  };
-
-  combatants.push(combatant);
-  sortCombatants();
-  saveCombatants();
-  renderCombatants();
-
-  creatureModal.style.display = "none";
-  modalForm.reset();
-  extraFields.style.display = "none";
-});
-
-// Turn logic
-function nextTurn() {
-  if (combatants.length === 0) return;
-  currentTurnIndex = (currentTurnIndex + 1) % combatants.length;
-  updateTurnDisplay();
+function openCreatureModal() {
+  document.getElementById('creatureModal').style.display = 'flex';
 }
 
-function prevTurn() {
-  if (combatants.length === 0) return;
-  currentTurnIndex = (currentTurnIndex - 1 + combatants.length) % combatants.length;
-  updateTurnDisplay();
+function closeCreatureModal() {
+  document.getElementById('creatureModal').style.display = 'none';
+  document.getElementById('modalCreatureForm').reset();
+  document.getElementById('extraFields').style.display = 'none';
 }
 
-function updateTurnDisplay() {
-  if (combatants.length === 0) {
-    currentTurnDisplay.innerHTML = "🟢 Current Turn: <strong>None</strong>";
-  } else {
-    const current = combatants[currentTurnIndex];
-    currentTurnDisplay.innerHTML = `🟢 Current Turn: <strong>${current.name}</strong>`;
-  }
+document.getElementById('showMoreBtn').addEventListener('click', () => {
+  document.getElementById('extraFields').style.display = 'flex';
+});
+
+function addCombatant(event) {
+  event.preventDefault();
+  const name = document.getElementById('modalName').value;
+  const init = parseInt(document.getElementById('modalInit').value);
+  const image = document.getElementById('modalImage').value || '';
+  const ac = document.getElementById('modalAC').value || '-';
+  const hp = document.getElementById('modalHP').value || '-';
+  const maxHp = document.getElementById('modalMaxHP').value || hp;
+
+  combatants.push({
+    name, init, image, ac, hp, maxHp,
+    statusEffects: [],
+    group: null
+  });
+
+  closeCreatureModal();
+  sortCombatants();
+  saveData();
+  renderCombatants();
 }
 
 function sortCombatants() {
   combatants.sort((a, b) => b.init - a.init);
 }
 
-function saveCombatants() {
-  localStorage.setItem("combatants", JSON.stringify(combatants));
-}
-
 function renderCombatants() {
-  combatantList.innerHTML = "";
-  combatants.forEach((c) => {
-    if (c.isGroup) {
-      // Group row
-      const groupRow = document.createElement("div");
-      groupRow.className = "creature-row group-row";
-      groupRow.innerHTML = `
-        <div class="cell cell-init" contenteditable="true">${c.init}</div>
-        <div class="cell cell-name" contenteditable="true">${c.name} (Group)</div>
-        <div class="cell cell-hp">—</div>
-        <div class="cell cell-ac">—</div>
-        <div class="cell cell-status">—</div>
-        <div class="cell cell-actions"><button onclick="deleteGroup(${c.id})">🗑</button></div>
-      `;
-      groupRow.querySelector(".cell-init").addEventListener("blur", (e) => {
-        c.init = parseInt(e.target.innerText) || 0;
-        sortCombatants();
-        saveCombatants();
-        renderCombatants();
-      });
-      groupRow.querySelector(".cell-name").addEventListener("blur", (e) => {
-        c.name = e.target.innerText.replace(" (Group)", "").trim();
-        saveCombatants();
-        renderCombatants();
-      });
-      combatantList.appendChild(groupRow);
+  const list = document.getElementById('combatantList');
+  list.innerHTML = '';
 
-      // Group members
-      c.members.forEach((m) => {
-        const row = document.createElement("div");
-        row.className = "creature-row group-member";
-        row.innerHTML = `
-          <div class="cell cell-init">—</div>
-          <div class="cell cell-name" contenteditable="true">${m.name}</div>
-          <div class="cell cell-hp" contenteditable="true">${m.hp}/${m.maxHp}</div>
-          <div class="cell cell-ac" contenteditable="true">${m.ac}</div>
-          <div class="cell cell-status" contenteditable="true">${m.status}</div>
-          <div class="cell cell-actions"><button onclick="removeFromGroup(${c.id}, ${m.id})">❌</button></div>
-        `;
-        attachEditableEvents(row, m, c.id);
-        combatantList.appendChild(row);
-      });
+  combatants.forEach((c, index) => {
+    const row = document.createElement('div');
+    row.className = 'creature-row';
 
-      const dropZone = document.createElement("div");
-      dropZone.className = "creature-row drop-zone";
-      dropZone.innerHTML = '<div class="cell" colspan="6">[ Drag here to add to group ]</div>';
-      dropZone.addEventListener("dragover", (e) => e.preventDefault());
-      dropZone.addEventListener("drop", (e) => {
-        const draggedId = parseInt(e.dataTransfer.getData("text/plain"));
-        const dragged = combatants.find(x => x.id === draggedId);
-        if (!dragged || dragged.isGroup) return;
-        c.members.push(dragged);
-        combatants = combatants.filter(x => x.id !== draggedId);
-        saveCombatants();
-        renderCombatants();
-      });
-      combatantList.appendChild(dropZone);
+    const statusTags = c.statusEffects?.map(se => {
+      return `<span class="status-tag">${se.name} (${se.rounds})</span>`;
+    }).join(' ') || '';
 
-    } else {
-      const row = document.createElement("div");
-      row.className = "creature-row";
-      row.setAttribute("draggable", true);
-      row.ondragstart = (e) => {
-        e.dataTransfer.setData("text/plain", c.id);
-      };
-      row.innerHTML = `
-        <div class="cell cell-init" contenteditable="true">${c.init}</div>
-        <div class="cell cell-name" contenteditable="true">${c.name}</div>
-        <div class="cell cell-hp" contenteditable="true">${c.hp}/${c.maxHp}</div>
-        <div class="cell cell-ac" contenteditable="true">${c.ac}</div>
-        <div class="cell cell-status" contenteditable="true">${c.status}</div>
-        <div class="cell cell-actions"><button onclick="deleteCombatant(${c.id})">🗑</button></div>
-      `;
-      attachEditableEvents(row, c);
-      combatantList.appendChild(row);
-    }
+    const statusDropdown = `
+      <select onchange="applyStatusEffect(${index}, this)">
+        <option value="">＋ Add</option>
+        ${statusOptions.map(s => `<option value="${s}">${s}</option>`).join('')}
+      </select>
+    `;
+
+    row.innerHTML = `
+      <div class="cell">${c.init}</div>
+      <div class="cell">${c.name}</div>
+      <div class="cell">${c.hp}/${c.maxHp}</div>
+      <div class="cell">${c.ac}</div>
+      <div class="cell">${statusTags}${statusDropdown}</div>
+      <div class="cell cell-actions">
+        <button onclick="adjustHp(${index}, 1)">＋</button>
+        <button onclick="adjustHp(${index}, -1)">−</button>
+        <button onclick="deleteCombatant(${index})">✖</button>
+      </div>
+    `;
+
+    list.appendChild(row);
   });
 
   updateTurnDisplay();
+  document.getElementById('roundCounter').textContent = `Round: ${round}`;
 }
 
-function attachEditableEvents(row, obj, groupId = null) {
-  const fields = ["init", "name", "hp", "ac", "status"];
-  fields.forEach((field, idx) => {
-    const cell = row.children[idx];
-    if (!cell || field === "init" && obj.isGroupMember) return;
-    cell.addEventListener("blur", () => {
-      let value = cell.innerText.trim();
-      if (field === "init") value = parseInt(value) || 0;
-      if (field === "hp" && value.includes("/")) {
-        const [hp, maxHp] = value.split("/");
-        obj.hp = hp.trim();
-        obj.maxHp = maxHp.trim();
-      } else {
-        obj[field] = value;
-      }
-      saveCombatants();
-    });
-  });
-}
-
-function deleteCombatant(id) {
-  combatants = combatants.filter(c => c.id !== id);
-  saveCombatants();
-  renderCombatants();
-}
-
-function deleteGroup(id) {
-  combatants = combatants.filter(c => c.id !== id);
-  saveCombatants();
-  renderCombatants();
-}
-
-function removeFromGroup(groupId, memberId) {
-  const group = combatants.find(c => c.id === groupId);
-  if (!group) return;
-  const member = group.members.find(m => m.id === memberId);
-  if (member) {
-    combatants.push(member);
-    group.members = group.members.filter(m => m.id !== memberId);
-    saveCombatants();
+function adjustHp(index, delta) {
+  let c = combatants[index];
+  if (!isNaN(parseInt(c.hp))) {
+    c.hp = Math.max(0, parseInt(c.hp) + delta);
+    saveData();
     renderCombatants();
   }
 }
+
+function deleteCombatant(index) {
+  combatants.splice(index, 1);
+  if (currentTurnIndex >= combatants.length) {
+    currentTurnIndex = 0;
+  }
+  saveData();
+  renderCombatants();
+}
+
+function nextTurn() {
+  currentTurnIndex++;
+  if (currentTurnIndex >= combatants.length) {
+    currentTurnIndex = 0;
+    round++;
+    tickStatusEffects();
+  }
+  renderCombatants();
+}
+
+function prevTurn() {
+  currentTurnIndex--;
+  if (currentTurnIndex < 0) {
+    currentTurnIndex = combatants.length - 1;
+    round = Math.max(1, round - 1);
+  }
+  renderCombatants();
+}
+
+function updateTurnDisplay() {
+  const display = document.getElementById('currentTurnDisplay');
+  if (combatants.length === 0) {
+    display.innerHTML = '🟢 Current Turn: <strong>None</strong>';
+  } else {
+    display.innerHTML = `🟢 Current Turn: <strong>${combatants[currentTurnIndex]?.name}</strong>`;
+  }
+}
+
+function tickStatusEffects() {
+  combatants.forEach(c => {
+    c.statusEffects = (c.statusEffects || []).map(effect => ({
+      ...effect,
+      rounds: effect.rounds - 1
+    })).filter(effect => effect.rounds > 0);
+  });
+}
+
+function applyStatusEffect(index, select) {
+  const effect = select.value;
+  if (!effect) return;
+  const rounds = parseInt(prompt('How many rounds?'), 10);
+  if (isNaN(rounds) || rounds <= 0) return;
+
+  const combatant = combatants[index];
+  if (!combatant.statusEffects) combatant.statusEffects = [];
+
+  combatant.statusEffects.push({ name: effect, rounds });
+  saveData();
+  renderCombatants();
+}
+
+function saveData() {
+  localStorage.setItem('combatants', JSON.stringify(combatants));
+  localStorage.setItem('turnIndex', currentTurnIndex);
+  localStorage.setItem('round', round);
+}
+
+function loadData() {
+  const stored = localStorage.getItem('combatants');
+  if (stored) combatants = JSON.parse(stored);
+  currentTurnIndex = parseInt(localStorage.getItem('turnIndex')) || 0;
+  round = parseInt(localStorage.getItem('round')) || 1;
+  renderCombatants();
+}
+
+function exportToPDF() {
+  alert("PDF export not yet implemented.");
+}
+
+function triggerImport() {
+  document.getElementById('importInput').click();
+}
+
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const data = JSON.parse(e.target.result);
+    combatants = data.combatants || [];
+    currentTurnIndex = data.currentTurnIndex || 0;
+    round = data.round || 1;
+    saveData();
+    renderCombatants();
+  };
+  reader.readAsText(file);
+}
+
+window.addEventListener('load', loadData);

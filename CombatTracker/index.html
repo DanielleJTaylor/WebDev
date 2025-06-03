@@ -9,64 +9,62 @@
 <body>
   <header>
     <h1>🧝 D&D Combat Tracker</h1>
-    <label class="theme-switch">
-      <input type="checkbox" id="themeToggle">
-      <span class="slider"></span>
-    </label>
+    <div>
+      <button id="addCombatantBtn">+ Add Combatant</button>
+      <button id="addGroupBtn">+ Add Group</button>
+      <button id="startEncounterBtn">▶ Start Encounter</button>
+    </div>
   </header>
 
-  <div class="controls-row">
-    <div class="controls-right">
-      <button onclick="openCreatureModal()">+ Add Creature</button>
-      <button onclick="addGroup()">+ Add Group</button>
-      <button onclick="startEncounter()">▶ Start Encounter</button>
-    </div>
-
-    <div class="turn-controls">
+  <section class="tracker-wrapper">
+    <div class="controls-row">
+      <span id="roundCounter">Round: 1</span>
       <button onclick="prevTurn()">⬅ Previous Turn</button>
-      <span id="currentTurnDisplay">🟢 Current Turn: Jet</span>
+      <div id="currentTurnDisplay">🟢 Current Turn: <strong>None</strong></div>
       <button onclick="nextTurn()">➡ Next Turn</button>
+      <button onclick="saveEncounter()">💾 Save</button>
+      <button onclick="triggerImport()">📂 Load</button>
+      <button onclick="exportToPDF()">🖨 Export</button>
+      <button onclick="clearData()">🗑️ Clear</button>
+      <input type="file" id="importInput" accept=".json" hidden />
     </div>
 
-    <div class="controls-right">
-      <button onclick="saveEncounter()">💾 Save Encounter</button>
-      <button onclick="loadEncounter()">📂 Load Encounter</button>
-      <button onclick="exportToPDF()">🖨 Export to PDF</button>
-      <button onclick="clearData()">🗑️ Clear Tracker</button>
-    </div>
-  </div>
-
-  <div class="tracker-wrapper">
     <div class="tracker-table-header">
-      <div class="cell">INIT</div>
-      <div class="cell">NAME</div>
+      <div class="cell">Init</div>
+      <div class="cell">Name</div>
       <div class="cell">HP</div>
       <div class="cell">AC</div>
-      <div class="cell">STATUS</div>
-      <div class="cell">ACTIONS</div>
+      <div class="cell">Status</div>
+      <div class="cell">Actions</div>
     </div>
     <div id="combatantList"></div>
-  </div>
+  </section>
 
-  <!-- Modal for adding creature -->
   <div id="creatureModal">
-    <div id="modalContent">
-      <form id="modalCreatureForm">
+    <form id="modalCreatureForm">
+      <div id="modalContent">
+        <h2>Add Combatant</h2>
         <input type="text" id="modalName" placeholder="Name" required />
         <input type="number" id="modalInit" placeholder="Initiative" required />
-        <input type="text" id="modalImage" placeholder="Image URL" />
+        <input type="text" id="modalImage" placeholder="Image URL (optional)" />
+        <button type="button" id="showMoreBtn">+ More Fields</button>
         <div id="extraFields">
           <input type="number" id="modalAC" placeholder="Armor Class" />
-          <input type="number" id="modalHP" placeholder="Current HP" />
+          <input type="number" id="modalHP" placeholder="HP" />
           <input type="number" id="modalMaxHP" placeholder="Max HP" />
         </div>
-        <button type="button" id="showMoreBtn">Show More</button>
-        <button type="submit">Add Creature</button>
-      </form>
-    </div>
+        <button type="submit">Add</button>
+      </div>
+    </form>
   </div>
+
+  <footer style="text-align:center;margin-top:2rem;">
+    <label class="theme-switch">
+      <input type="checkbox" id="themeToggle" />
+      <span class="slider"></span>
+    </label>
+  </footer>
 
   <script src="script.js"></script>
 </body>
 </html>
-
