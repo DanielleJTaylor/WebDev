@@ -436,6 +436,8 @@ function removeCombatantById(id) {
     return found;
 }
 
+// ... (rest of your existing code) ...
+
 // ========== PART 4: Combatant Row, Status Effects & Actions ==========
 
 function createCombatantRow(c, isGrouped = false, groupRef = null) {
@@ -477,17 +479,18 @@ function createCombatantRow(c, isGrouped = false, groupRef = null) {
     `;
 
     // Image cell placeholder (replace with actual image if c.imageUrl exists)
+    // Make image cell editable
     const imageContent = c.imageUrl ? `<img src="${c.imageUrl}" alt="${c.name}" class="combatant-image">` : '🧍';
-    const imageCell = `<div class="cell image-cell">${imageContent}</div>`;
+    const imageCell = `<div class="cell image-cell" data-field="imageUrl">${imageContent}</div>`;
 
     row.innerHTML = `
         ${imageCell}
-        <div class="cell init-cell">${isGrouped ? '' : c.init}</div>
-        <div class="cell cell-name" contenteditable="true">${c.name}</div>
-        <div class="cell cell-ac" contenteditable="true">${c.ac}</div>
-        <div class="cell cell-hp" contenteditable="true">${c.hp}/${c.maxHp}</div>
+        <div class="cell init-cell" contenteditable="true" data-field="init">${isGrouped ? '' : c.init}</div>
+        <div class="cell cell-name" contenteditable="true" data-field="name">${c.name}</div>
+        <div class="cell cell-ac" contenteditable="true" data-field="ac">${c.ac}</div>
+        <div class="cell cell-hp" contenteditable="true" data-field="hp">${c.hp}/${c.maxHp}</div>
         <div class="cell status-cell">${statusTags} ${statusDropdown}</div>
-        <div class="cell role-cell">${c.role || 'player'}</div>
+        <div class="cell role-cell" contenteditable="true" data-field="role">${c.role || 'player'}</div>
         <div class="cell action-cell">
             <button onclick="duplicateCombatant('${c.id}')" title="Duplicate Combatant">+</button>
             ${groupRef ? `<button onclick="removeFromGroup('${c.id}', '${groupRef.id}')" title="Remove from Group">⬅</button>` : ''}
@@ -495,44 +498,46 @@ function createCombatantRow(c, isGrouped = false, groupRef = null) {
         </div>
     `;
 
-    attachEditableEvents(row, c);
+    attachEditableEvents(row, c); // This will handle blur and keydown for contenteditable fields
+    attachImageEditEvent(row, c); // New function for image editing
     return row;
 }
 
 function attachEditableEvents(row, c) {
     row.querySelectorAll('[contenteditable="true"]').forEach(cell => {
         cell.addEventListener('blur', (e) => {
-            const [nameEl, acEl, hpEl] = row.querySelectorAll('.cell-name, .cell-ac, .cell-hp');
+            const field = cell.dataset.field;
+            const oldValue = c[field];
+            let newValue;
 
-            const newName = nameEl.textContent.trim();
-            const newAC = parseInt(acEl.textContent.trim());
-            const hpText = hpEl.textContent.trim();
-            const [currentHP, maxHP] = parseHP(hpText, c.hp, c.maxHp);
-
-            // Update only if value has actually changed
-            if (newName !== c.name) {
-                logChange(`${c.name} renamed to ${newName}`);
-                c.name = newName;
+            if (field === 'hp') {
+                const hpText = cell.textContent.trim();
+                const [currentHP, maxHP] = parseHP(hpText, c.hp, c.maxHp);
+                if (currentHP !== c.hp || maxHP !== c.maxHp) {
+                    logChange(`${c.name} HP changed: ${c.hp}/${c.maxHp} → ${currentHP}/${maxHP}`);
+                    c.hp = Math.max(0, Math.min(currentHP, maxHP)); // Clamp HP between 0 and maxHP
+                    c.maxHp = maxHP; // Update max HP if changed
+                }
+            } else if (field === 'init' || field === 'ac') {
+                newValue = parseInt(cell.textContent.trim());
+                if (isNaN(newValue)) {
+                    alert(`Invalid input for ${field}. Please enter a number.`);
+                    cell.textContent = oldValue; // Revert to old value
+                    return;
+                }
+                if (newValue !== oldValue) {
+                    logChange(`${c.name}'s ${field} changed to ${newValue}`);
+                    c[field] = newValue;
+                }
+            } else if (field === 'name' || field === 'role') {
+                newValue = cell.textContent.trim();
+                if (newValue !== oldValue) {
+                    logChange(`${c.name}'s ${field} changed to ${newValue}`);
+                    c[field] = newValue;
+                }
             }
-
-            if (!isNaN(newAC) && newAC !== c.ac) {
-                logChange(`${c.name}'s AC changed to ${newAC}`);
-                c.ac = newAC;
-            }
-
-            if (currentHP !== c.hp || maxHP !== c.maxHp) {
-                logChange(`${c.name} HP changed: ${c.hp}/${c.maxHp} → ${currentHP}/${maxHP}`);
-                c.hp = Math.max(0, Math.min(currentHP, maxHP)); // Clamp HP between 0 and maxHP
-                c.maxHp = maxHP; // Update max HP if changed
-            }
-
-            // If a group's initiative changed, it needs to be updated and re-rendered.
-            // This is handled in createGroupRow's blur event listener.
-            // For individual combatants, if their initiative was editable, it would be here.
-            // Currently, initiative is not editable directly in the row for individuals.
-
             saveCombatants();
-            renderCombatants(); // Re-render to reflect changes, especially if initiative affects order
+            renderCombatants(); // Re-render to reflect changes, especially if initiative affects order or sorting
         });
 
         // Add keydown event for 'Enter' to blur and save
@@ -544,6 +549,27 @@ function attachEditableEvents(row, c) {
         });
     });
 }
+
+function attachImageEditEvent(row, c) {
+    const imageCell = row.querySelector('.image-cell');
+    if (imageCell) {
+        imageCell.addEventListener('dblclick', () => {
+            const newImageUrl = prompt(`Enter new image URL for ${c.name} (leave blank to remove image):`, c.imageUrl || '');
+            if (newImageUrl !== null) { // User didn't click cancel
+                if (newImageUrl !== c.imageUrl) {
+                    c.imageUrl = newImageUrl.trim();
+                    logChange(`${c.name}'s image URL changed to ${c.imageUrl || 'none'}`);
+                    saveCombatants();
+                    renderCombatants(); // Re-render to update the image
+                }
+            }
+        });
+    }
+}
+
+
+// ... (rest of your existing code, no changes needed below this) ...
+
 
 function parseHP(hpText, currentHP, maxHP) {
     // Handle math operations (e.g., +5, -10)
