@@ -318,36 +318,28 @@ input:checked + .slider:before {
   border-bottom: 2px solid var(--border);
 }
 
-/* Drop zone under group */
+
+
 .drop-zone {
-  background-color: transparent;
-  color: transparent;
-  border: none;
-  text-align: center;
-  font-style: italic;
-  font-size: 0.9rem;
-  cursor: pointer;
-  padding: 0.4rem;
-  transition: all 0.2s ease;
-  min-height: 1rem; /* avoids layout jump */
+  height: 10px;
+  opacity: 0;
+  pointer-events: none; /* prevent hover */
+  transition: opacity 0.2s ease;
+  background-color: #2a2a2a;
+  border: 1px dashed #444;
+  margin: 0;
+  padding: 0;
 }
 
-/* Show only when hovered or dragging */
-.drop-zone.drag-over {
-  background-color: #2a2a2a;
-  color: #aaa;
-  border: 1px dashed #666;
+body.dragging .drop-zone {
+  opacity: 1;
+  pointer-events: auto; /* re-enable when dragging */
 }
 
 
 
 /* Best approach for grid layout: */
 .creature-row[data-group-member="true"] .cell:nth-child(2) {
-  transform: translateX(1.5em);
-}
-
-
-.creature-row[data-group-member="true"] .cell:nth-child(2)::before {
-  content: "↳ ";
-  color: #888;
+  padding-left: 2em;
+  font-style: italic;
 }
