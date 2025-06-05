@@ -237,3 +237,28 @@ header {
     align-items: center;
     justify-content: center;
 }
+
+.tracker-log-panel {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100%;
+  background-color: #1e1e1e;
+  color: white;
+  border-left: 2px solid var(--accent);
+  overflow-y: auto;
+  transition: right 0.3s ease-in-out;
+  z-index: 999;
+  padding: 1em;
+}
+
+.tracker-log-panel.show-log {
+  right: 0;
+}
+
+.log-content {
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+

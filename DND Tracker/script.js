@@ -924,9 +924,8 @@ document.getElementById('toggleLogBtn').addEventListener('click', () => {
     container.classList.toggle('show-log');
 
     const logContent = document.getElementById('historyLogContent');
-    // Ensure log content is updated every time it's shown
     logContent.innerHTML = historyLog.map(entry => `<div>${entry}</div>`).join('');
-    logContent.scrollTop = logContent.scrollHeight; // Scroll to bottom when shown
+    logContent.scrollTop = logContent.scrollHeight;
 });
 
 // Initial load when script starts

@@ -46,10 +46,15 @@ function getUniqueName(baseName) {
 }
 
 function getFlatCombatantList() {
-    // Flatten the list and sort by initiative for turn order and display
-    return combatants.flatMap(c => c.isGroup ? c.members : [c])
-                     .sort((a, b) => b.init - a.init);
+    return combatants.flatMap(c => {
+        if (c.isGroup) {
+            // Spread each member, but attach the group's initiative for sorting
+            return c.members.map(m => ({ ...m, groupInit: c.init }));
+        }
+        return [{ ...c, groupInit: c.init }];
+    }).sort((a, b) => b.groupInit - a.groupInit);
 }
+
 
 function findCombatantById(id) {
     for (const c of combatants) {
@@ -62,16 +67,23 @@ function findCombatantById(id) {
     return null;
 }
 
+
+function updateLogPanel() {
+    const logContent = document.getElementById('historyLogContent');
+    if (!logContent) return;
+    logContent.innerHTML = historyLog.map(line => `<div>${line}</div>`).join('');
+    logContent.scrollTop = logContent.scrollHeight;
+}
+
+
+
 function logChange(msg) {
     const timestamp = new Date().toLocaleTimeString();
     historyLog.push(`[${timestamp}] ${msg}`);
-    const logContent = document.getElementById('historyLogContent');
-    if (logContent) {
-        logContent.innerHTML = historyLog.map(line => `<div>${line}</div>`).join('');
-        logContent.scrollTop = logContent.scrollHeight; // Scroll to bottom
-    }
-    saveCombatants(); // Log changes should also trigger a save
+    updateLogPanel(); // ✅ update the panel immediately
+    saveCombatants(); // Persist changes
 }
+
 
 // ========== MODAL HANDLING ==========
 const creatureModal = document.getElementById('creatureModal');
@@ -485,7 +497,9 @@ function createCombatantRow(c, isGrouped = false, groupRef = null) {
 
     row.innerHTML = `
         ${imageCell}
-        <div class="cell init-cell" contenteditable="true" data-field="init">${isGrouped ? '' : c.init}</div>
+        <div class="cell init-cell" ${isGrouped ? '' : 'contenteditable="true"'} data-field="init">
+        ${isGrouped ? '' : c.init}
+        </div>
         <div class="cell cell-name" contenteditable="true" data-field="name">${c.name}</div>
         <div class="cell cell-ac" contenteditable="true" data-field="ac">${c.ac}</div>
         <div class="cell cell-hp" contenteditable="true" data-field="hp">${c.hp}/${c.maxHp}</div>
@@ -550,22 +564,26 @@ function attachEditableEvents(row, c) {
     });
 }
 
+
 function attachImageEditEvent(row, c) {
     const imageCell = row.querySelector('.image-cell');
     if (imageCell) {
         imageCell.addEventListener('dblclick', () => {
             const newImageUrl = prompt(`Enter new image URL for ${c.name} (leave blank to remove image):`, c.imageUrl || '');
-            if (newImageUrl !== null) { // User didn't click cancel
-                if (newImageUrl !== c.imageUrl) {
-                    c.imageUrl = newImageUrl.trim();
-                    logChange(`${c.name}'s image URL changed to ${c.imageUrl || 'none'}`);
+            if (newImageUrl !== null) {
+                const trimmed = newImageUrl.trim();
+                if (trimmed !== c.imageUrl) {
+                    logChange(`${c.name}'s image ${trimmed ? `set to ${trimmed}` : 'removed'}`);
+                    c.imageUrl = trimmed;
                     saveCombatants();
-                    renderCombatants(); // Re-render to update the image
+                    renderCombatants();
                 }
             }
         });
     }
 }
+
+
 
 
 // ... (rest of your existing code, no changes needed below this) ...
