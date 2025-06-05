@@ -298,7 +298,7 @@ function createGroupRow(group) {
 
     row.innerHTML = `
         <div class="cell"></div>
-        <div class="cell">${group.init}</div>
+        <div class="cell init-cell" contenteditable="true" data-field="init">${group.init}</div>
         <div class="cell cell-name" contenteditable="true">${group.name}</div>
         <div class="cell cell-ac" contenteditable="true">${group.ac || ''}</div>
         <div class="cell cell-hp">${group.hp || ''}${group.maxHp ? `/${group.maxHp}` : ''}</div>
@@ -312,6 +312,8 @@ function createGroupRow(group) {
 
     // Attach editable events for group name/init/ac/hp
     row.querySelectorAll('[contenteditable="true"]').forEach(cell => {
+        attachEditableEvents(row, group);
+
         cell.addEventListener('blur', () => {
             const newName = row.querySelector('.cell-name').textContent.trim();
             const newInit = parseInt(row.querySelector('.cell:nth-child(2)').textContent.trim());
