@@ -11,10 +11,18 @@ const statusOptions = [
 ];
 
 // ========== THEME TOGGLE ==========
-document.getElementById('themeToggle').addEventListener('change', (e) => {
-    document.body.classList.toggle('dark', e.target.checked);
-    saveCombatants(); // Save theme preference
+const themeToggle = document.getElementById('themeToggle');
+
+themeToggle.addEventListener('change', () => {
+  if (themeToggle.checked) {
+    document.body.classList.remove('light');
+    document.body.classList.add('dark');
+  } else {
+    document.body.classList.remove('dark');
+    document.body.classList.add('light');
+  }
 });
+
 
 // ========== UTILITIES ==========
 function generateUniqueId() {

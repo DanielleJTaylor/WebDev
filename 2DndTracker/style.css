@@ -262,3 +262,66 @@ header {
   line-height: 1.4;
 }
 
+
+
+
+body.light {
+  background-color: #fdf6e3;
+  background-image: none;
+  color: #4a3c1a;
+}
+
+body.light header,
+body.light .controls-row {
+  background-color: #f6e4c1;
+  color: #4a3c1a;
+  border-bottom: 1px solid #d0bfa2;
+}
+
+body.light .tracker-table {
+  background-color: #f7eddc;
+}
+
+body.light .creature-row {
+  background-color: #f7eddc;
+}
+
+body.light .group-header {
+  background-color: #e9d9b0;
+  color: #4a3c1a;
+  border-top: 2px solid #d0bfa2;
+}
+
+body.light .tracker-table-header {
+  background-color: #f6e4c1;
+  color: #4a3c1a;
+  border-bottom: 1px solid #d0bfa2;
+}
+
+body.light .cell[contenteditable="true"],
+body.light .cell select {
+  background-color: #fffaf0;
+  color: #4a3c1a;
+  border: 1px dashed #d0bfa2;
+}
+
+body.light .status-tag {
+  background-color: #dfc9a4;
+  border: 1px solid #c3a982;
+  color: #4a3c1a;
+}
+
+body.light .drop-zone.highlight {
+  background-color: rgba(223, 201, 164, 0.4);
+  border: 1px dashed #c3a982;
+}
+
+body.light button,
+body.light .button-group button {
+  background-color: #7fb069;
+  color: white;
+}
+
+body.light button:hover {
+  background-color: #6ca05b;
+}
